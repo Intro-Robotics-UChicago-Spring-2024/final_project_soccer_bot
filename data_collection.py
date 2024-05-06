@@ -101,7 +101,6 @@ class Data_Collection(object):
         #list of the data ranges that lidar picks up
         range_lst = data.ranges
         #finds the smallest value which represents the distance of the closest object, only takes ranges in front of robot
-        #written for the Riplidar
         back_arr = range_lst[150:210]
         #takes out all zeros representing no reading
         filter_close = [x for x in back_arr if x != 0]
@@ -110,7 +109,7 @@ class Data_Collection(object):
         else:
             self.closest = float('inf')
 
-        if self.closest <= self.min_distance:
+        if self.closest <= .3:
             self.move.linear.x = 0
             self.move.angular.z = 0
             # Publish msg to cmd_vel.
