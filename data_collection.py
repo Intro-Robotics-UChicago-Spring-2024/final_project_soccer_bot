@@ -28,6 +28,7 @@ def get_yaw_from_pose(p):
 
 class Data_Collection(object):
     def __init__(self):
+        rospy.init_node("soccer")
         # once everything is setup initialized will be set to true
         self.initialized = False
 
@@ -40,12 +41,15 @@ class Data_Collection(object):
         # set up ROS / OpenCV bridge
         self.bridge = cv_bridge.CvBridge()
 
-        rospy.Subscriber('/cmd_vel', Twist, self.callback)
+        # rospy.Subscriber('/cmd_vel', Twist, self.callback)
+        # rospy.sleep(1)
 
-        # subscribe to the lidar scan from the robot
-        rospy.Subscriber(self.scan_topic, LaserScan, self.robot_scan_received)
-
-        rospy.Subscriber('camera/rgb/image_raw', Image, self.image_callback)
+        # rospy.Subscriber('camera/rgb/image_raw', Image, self.image_callback)
+        # rospy.sleep(1)
+        # # subscribe to the lidar scan from the robot
+        # rospy.Subscriber(self.scan_topic, LaserScan, self.robot_scan_received)
+        # rospy.sleep(1)
+        
 
         self.data = []
         # Create a default twist msg (all values 0).
@@ -61,10 +65,24 @@ class Data_Collection(object):
         self.start_time = rospy.Time.now().to_sec()
 
         self.curr_yaw = None
+        self.odom_pose = None
+        rospy.on_shutdown(self.save_data)
 
-        self.initialized = True
+
+
         #need to change folder every time
-        self.save_dir = '/path/to/your/directory/'
+        self.save_dir = '/home/tarachugh/catkin_ws/src/final_project_soccer_bot/data_coll_5_8'
+
+        rospy.Subscriber('/cmd_vel', Twist, self.callback)
+        rospy.sleep(1)
+
+        rospy.Subscriber('camera/rgb/image_raw', Image, self.image_callback)
+        rospy.sleep(1)
+        # subscribe to the lidar scan from the robot
+        rospy.Subscriber(self.scan_topic, LaserScan, self.robot_scan_received)
+        rospy.sleep(1)
+        self.initialized = True
+
         
 
     def robot_scan_received(self, data): # wait until initialization is complete
@@ -101,13 +119,15 @@ class Data_Collection(object):
         #list of the data ranges that lidar picks up
         range_lst = data.ranges
         #finds the smallest value which represents the distance of the closest object, only takes ranges in front of robot
-        back_arr = range_lst[150:210]
+        back_arr = range_lst[530:610]
         #takes out all zeros representing no reading
         filter_close = [x for x in back_arr if x != 0]
         if filter_close:
             self.closest = min(filter_close)
         else:
             self.closest = float('inf')
+        
+        print(self.closest)
 
         if self.closest <= .3:
             self.move.linear.x = 0
@@ -123,21 +143,24 @@ class Data_Collection(object):
         self.angular_velocity = msg.angular.z
 
     def image_callback(self, msg):
+        if not(self.initialized):
+            return
         #accesses the image from the camera
         image = self.bridge.imgmsg_to_cv2(msg,desired_encoding='bgr8')
 
         # Generate a unique filename (optional)
-        file_name = 'image_' + rospy.Time.now().to_sec() + '.jpg'
+        file_name = 'image_' + str(rospy.Time.now().to_sec()) + '.jpg'
         # Save the image to the specified directory
         cv2.imwrite(os.path.join(self.save_dir, file_name), image)
-        self.data.append([rospy.Time.now().to_sec(), self.linear_velocity, self.angular_velocity, self.odom_pose, self.curr_yaw])
-        rospy.sleep(1)
+        self.data.append([rospy.Time.now().to_sec(), self.linear_velocity, self.angular_velocity])
 
 
-    def save_data(self, matrix):
+    def save_data(self, matrix = None):
+        if not matrix:
+            matrix = self.data
         #need to change name every time
         path = "robot_run_data_1.csv"
-        np.savetxt(path, matrix, delimiter=",")
+        np.savetxt(path, matrix, fmt='%s')
         print("Saved to:", path)
         return
     
