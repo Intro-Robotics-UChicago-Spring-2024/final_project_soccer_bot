@@ -152,14 +152,14 @@ class Data_Collection(object):
         file_name = 'image_' + str(rospy.Time.now().to_sec()) + '.jpg'
         # Save the image to the specified directory
         cv2.imwrite(os.path.join(self.save_dir, file_name), image)
-        self.data.append([rospy.Time.now().to_sec(), self.linear_velocity, self.angular_velocity])
+        self.data.append([rospy.Time.now().to_sec(), self.linear_velocity, self.angular_velocity], "Good")
 
 
     def save_data(self, matrix = None):
         if not matrix:
             matrix = self.data
         #need to change name every time
-        path = "robot_run_data_1.csv"
+        path = os.path.join(self.save_dir, "robot_run_data.csv")
         np.savetxt(path, matrix, fmt='%s')
         print("Saved to:", path)
         return
