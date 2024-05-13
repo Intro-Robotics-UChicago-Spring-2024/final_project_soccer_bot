@@ -43,10 +43,11 @@ class Data_Process():
         for folder in top_dir:
             files = listdir(folder)
             for file in files():
-    
+                file_path = data_dir+'/'+folder+'/'+file
                 if file.startswith('image'):
+
                     ###Uses PIL Image, verify if PIL format is usable for us
-                    input_image = Image.open(file)
+                    input_image = Image.open(file_path)
 
                     preprocess = transforms.Compose([
                         transforms.Resize(256),     #change values
@@ -63,7 +64,7 @@ class Data_Process():
                     images.append(input_tensor)
 
                 elif file.endswith('.csv'):
-                    df = pd.read_csv(file, names=['Timestamp', 'Linear Velocity', 'Angular Velocity', 'Quality'], sep=' ')
+                    df = pd.read_csv(file_path, names=['Timestamp', 'Linear Velocity', 'Angular Velocity', 'Quality'], sep=' ')
                     for index, row in df.iterrows():
                         velocities.append((row['Timestamp'], row['Linear Velocity'], row['Angular Velocity'], row['Quality']))
                     
