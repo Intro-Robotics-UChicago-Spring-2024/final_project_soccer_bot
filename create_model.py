@@ -1,7 +1,6 @@
 
 import torch
 import torch.nn as nn
-import resnet
 from torch.utils.data import DataLoader
 from torch.utils.data.dataset import Dataset, random_split
 from torchvision import transforms
@@ -25,7 +24,7 @@ def main():
     #must specify epochs
 
     #make sure resnet14 is an option
-    model = resnet.resnet14(pretrained=False, num_classes=5, input_channels=1)
+    model = torch.hub.load('pytorch/vision:v0.10.0', 'resnet18', pretrained=True)
 
     loss_function = nn.MSELoss()
 
@@ -46,13 +45,13 @@ def main():
                                 momentum=momentum,
                                 weight_decay=weight_decay)
     
-    observed_data = Data_Process
+    observed_data = Data_Process()
     
     #load datasets, should be represented as (state, action) pair
     #observations should be images, actions should be linear and angular velocity
     #need to figure out how to combine
-    image_data = observed_data.images
-    actions = observed_data.velocities
+    image_data = observed_data.get_image()
+    actions = observed_data.get_actions()
     dataset = merge_data(image_data, actions)
 
     train_size = int(.8 * len(dataset))
@@ -60,10 +59,11 @@ def main():
 
     #must compute sizes and not just input fractions to avoid rounding errors and maintain consistency
     train_dataset, test_dataset = random_split(dataset, [train_size, test_size])
+    print(train_dataset[0])
 
     #I have a quad core processor which is why I put num_workers as 4 but we can vary depending on the hardware we run this on
-    train_loader = DataLoader(train_dataset, batchsize=128, shuffle=True, num_workers=4)
-    test_loader = DataLoader(test_dataset, batchsize=128, shuffle=True, num_workers=4)
+    train_loader = DataLoader(train_dataset, batch_size=128, shuffle=True, num_workers=4)
+    test_loader = DataLoader(test_dataset, batch_size=128, shuffle=True, num_workers=4)
 
     num_epochs = 10
     for epoch in range(start_epoch, num_epochs):
@@ -84,10 +84,15 @@ def train(model, train_loader, optimizer, loss_function):
         #only two variables since we currently only have two input states (image, motion), could modify to have more
         #should split up into specified batches of specific size
         image, action = data
+        print(image)
+        print("break")
+        print(action)
+       
         #zeros out the gradient for batch
         optimizer.zero_grad()
         #uses model to predict the action, should output an array of predictions
         pred_action = model(image)
+        print(pred_action)
 
         #Here we use a mean square error to determine how close/far the predictions are from the actual values
         loss = loss_function(pred_action, action)
@@ -153,14 +158,15 @@ class Data_Process():
     def __init__(self):
 
         ###need to change folder every time, directory where photos and csv is
-        self.data_dir = '/home/grantnakanishi/catkin_ws/src/final_project_soccer_bot/test_data'
+        self.data_dir = '/home/gnakanishi/catkin_ws/src/final_project_soccer_bot/test_data'
         
+        self.velocities = []
+        self.images = []
 
         #Not sure which image type we can use, whether PIL works or not
         self.load_images()
 
-        self.velocities = []
-        self.images = []
+        
 
     def load_images(self):
         """
@@ -202,6 +208,14 @@ class Data_Process():
                         for index, row in df.iterrows():
                             self.velocities.append((row['Linear Velocity'], row['Angular Velocity']))
 
+                while len(self.velocities) != len(self.images):
+                    self.velocities.append(self.velocities[len(self.velocities) - 1])        
+
+    def get_image(self):
+        return self.images
+
+    def get_actions(self):
+        return self.velocities
 
 
 if __name__ == '__main__':
