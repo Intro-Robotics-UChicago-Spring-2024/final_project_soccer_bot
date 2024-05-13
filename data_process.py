@@ -21,10 +21,8 @@ class Data_Process():
         #Not sure which image type we can use, whether PIL works or not
         self.load_images()
 
-        self.expert_dset = None
+        #self.expert_dset = None
         self.runs = []
-        #self.images = []
-        #self.velocities = []
 
     def load_images(self):
         """
@@ -40,33 +38,34 @@ class Data_Process():
         #see os walk documentation if more info needed
         for (top_dirpath, top_dirnames, top_filenames) in walk(photo_dir):
             for (dirpath, dirnames, filenames) in walk(top_dirnames):
-                if filenames.startswith('image'):
-                    ###Uses PIL Image, verify if PIL format is usable for us
-                    input_image = Image.open(filenames)
+                for file in filenames:
+                    if file.startswith('image'):
+                        ###Uses PIL Image, verify if PIL format is usable for us
+                        input_image = Image.open(file)
 
-                    preprocess = transforms.Compose([
-                        transforms.Resize(256),     #change values
-                        transforms.CenterCrop(224), #change values
-                        transforms.ToTensor(),
-                        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-                    ])
+                        preprocess = transforms.Compose([
+                            transforms.Resize(256),     #change values
+                            transforms.CenterCrop(224), #change values
+                            transforms.ToTensor(),
+                            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+                        ])
 
-                    input_tensor = preprocess(input_image)
-                    
-                    ###Unsure if this is needed (or how much image processesing is required)
-                    #input_batch = input_tensor.unsqueeze(0) # create a mini-batch as expected by the model
+                        input_tensor = preprocess(input_image)
+                        
+                        ###Unsure if this is needed (or how much image processesing is required)
+                        #input_batch = input_tensor.unsqueeze(0) # create a mini-batch as expected by the model
 
-                
-                    images.append(input_tensor)
-                    velocities.append(actions)
+                        images.append(input_tensor)
+                        velocities.append(actions)
 
-                elif filenames.endswith('.csv'):
-                    df = pd.read_csv(filenames)
-                    for index, row in df.iterrows():
-                        velocities.append(row['Linear Velocity'], row['Angular Velocity'])
+                    elif file.endswith('.csv'):
+                        df = pd.read_csv(file, names=['Timestamp', 'Linear Velocity', 'Angular Velocity', 'Quality'], sep=' ')
+                        for index, row in df.iterrows():
+                            velocities.append((row['Timestamp'], row['Linear Velocity'], row['Angular Velocity'], row['Quality']))
                         
             
-            ExpertDataSet(cur_run, images, velocities)
+            run = ExpertDataSet(cur_run, images, velocities)
+            self.runs.append(run)
             cur_run += 1
             images = []
             velocities = []
@@ -84,8 +83,10 @@ class ExpertDataSet(Dataset):
 
         Index stores what number run
         Observations stores all images as a list in chronological order
-        Actions stores all velocities read from the csv as a tuple pair 
-        (Linear, Angular) in order of each time stamp
+        Actions stores all velocities read from the csv as a tuple 
+        (Timestamp, Linear, Angular, Quality) in order of each time stamp, where
+        quality denotes either 'Good' or 'Bad' runs (where the goal is not
+        reached).
         """
         self.index = index
         self.observations = image_list
