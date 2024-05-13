@@ -56,7 +56,6 @@ class Data_Process():
                         #input_batch = input_tensor.unsqueeze(0) # create a mini-batch as expected by the model
 
                         images.append(input_tensor)
-                        velocities.append(actions)
 
                     elif file.endswith('.csv'):
                         df = pd.read_csv(file, names=['Timestamp', 'Linear Velocity', 'Angular Velocity', 'Quality'], sep=' ')
