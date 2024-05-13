@@ -35,9 +35,11 @@ class Data_Process():
         images = []
         velocities = []
 
+        photo_dir = self.data_dir
+
         #see os walk documentation if more info needed
         for (top_dirpath, top_dirnames, top_filenames) in walk(photo_dir):
-            for (dirpath, dirnames, filenames) in walk(top_dirnames):
+            for (dirpath, dirnames, filenames) in walk(photo_dir + '/' + top_dirnames):
                 for file in filenames:
                     if file.startswith('image'):
                         ###Uses PIL Image, verify if PIL format is usable for us
