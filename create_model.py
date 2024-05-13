@@ -4,6 +4,14 @@ import torch.nn as nn
 import resnet
 from torch.utils.data import DataLoader
 from torch.utils.data.dataset import Dataset, random_split
+from torchvision import transforms
+from torchvision.transforms import v2
+from os import walk
+from os import listdir
+import pandas as pd
+import numpy as np
+
+from PIL import Image
 
 def main():
     #load test data and split into train and validation, in this instance it would be the expert runs
@@ -38,12 +46,14 @@ def main():
                                 momentum=momentum,
                                 weight_decay=weight_decay)
     
+    observed_data = Data_Process
+    
     #load datasets, should be represented as (state, action) pair
     #observations should be images, actions should be linear and angular velocity
     #need to figure out how to combine
-    obsevations = 0
-    actions = 0
-    dataset = 0
+    image_data = observed_data.images
+    actions = observed_data.velocities
+    dataset = merge_data(image_data, actions)
 
     train_size = int(.8 * len(dataset))
     test_size = len(dataset) - train_size
@@ -56,15 +66,11 @@ def main():
     test_loader = DataLoader(test_dataset, batchsize=128, shuffle=True, num_workers=4)
 
     num_epochs = 10
-    for epoch in range(0, num_epochs):
+    for epoch in range(start_epoch, num_epochs):
         loss_from_train = train(model, train_loader, optimizer, loss_function)
         prediction = test(model, test_loader, optimizer, loss_function)
     
     torch.save(model.state_dict(), 'soccer_bot_model.pth')
-
-
-
-
 
 
 def train(model, train_loader, optimizer, loss_function):
@@ -117,6 +123,13 @@ def test(model, test_loader, optimizer, loss_function):
 
     return losses_test.avg
 
+def merge_data(image_data, action_data):
+    dataset = []
+
+    for index, image in enumerate(image_data):
+        dataset.append((image, action_data[index]))
+
+    return dataset
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""
@@ -134,6 +147,60 @@ class AverageMeter(object):
         self.sum += val * n
         self.count += n
         self.avg = self.sum / self.count
+
+class Data_Process():
+    
+    def __init__(self):
+
+        ###need to change folder every time, directory where photos and csv is
+        self.data_dir = '/home/grantnakanishi/catkin_ws/src/final_project_soccer_bot/test_data'
+        
+
+        #Not sure which image type we can use, whether PIL works or not
+        self.load_images()
+
+        self.velocities = []
+        self.images = []
+
+    def load_images(self):
+        """
+        Each image is loaded with os library and PIL library and then processed
+        following the basic standards specified by this resnet guide:
+        
+        https://pytorch.org/hub/pytorch_vision_resnet/
+        """
+
+        data_dir = self.data_dir
+
+        #see os walk documentation if more info needed
+        top_dir = listdir(data_dir)
+        for folder in top_dir:
+            if folder != ".DS_Store":
+                files = listdir(data_dir+'/'+folder)
+                for file in files:
+                    file_path = data_dir+'/'+folder+'/'+file
+                    if file.startswith('image'):
+
+                        ###Uses PIL Image, verify if PIL format is usable for us
+                        input_image = Image.open(file_path)
+
+                        preprocess = transforms.Compose([
+                            transforms.Resize(256),     #change values
+                            transforms.CenterCrop(224), #change values
+                            transforms.ToTensor(),
+                            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+                        ])
+
+                        input_tensor = preprocess(input_image)
+                        
+                        ###Unsure if this is needed (or how much image processesing is required)
+                        #input_batch = input_tensor.unsqueeze(0) # create a mini-batch as expected by the model
+
+                        self.images.append(input_tensor)
+                    elif file.endswith('.csv'):
+                        df = pd.read_csv(file_path, names=['Timestamp', 'Linear Velocity', 'Angular Velocity', 'Quality'], sep=' ')
+                        for index, row in df.iterrows():
+                            self.velocities.append((row['Linear Velocity'], row['Angular Velocity']))
 
 
 
