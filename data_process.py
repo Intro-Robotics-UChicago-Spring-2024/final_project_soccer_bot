@@ -22,6 +22,8 @@ class Data_Process():
         self.load_images()
 
         self.expert_dset = None
+        self.images = []
+        self.velocities = []
 
     def load_images(self):
         """
@@ -53,11 +55,13 @@ class Data_Process():
             ])
 
             input_tensor = preprocess(input_image)
-            input_batch = input_tensor.unsqueeze(0) # create a mini-batch as expected by the model
+            #input_batch = input_tensor.unsqueeze(0) # create a mini-batch as expected by the model
 
             ### Assumes df rows are loaded with indexing lining up to the order that photos are iterated over
             actions = (df['Linear Velocity'].iloc[cur_idx], df['Angular Velocity'].iloc[cur_idx])
-            self.expert_dset = ExpertDataSet(input_batch, actions)
+            #self.expert_dset = ExpertDataSet(input_batch, actions)
+            self.images.append(input_tensor)
+            self.velocities.append(actions)
 
             cur_idx += 1
 
