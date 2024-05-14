@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 
 import torch
 import torch.nn as nn
@@ -25,6 +26,8 @@ def main():
 
     #make sure resnet14 is an option
     model = torch.hub.load('pytorch/vision:v0.10.0', 'resnet18', pretrained=True)
+    num_ftrs = model.fc.in_features
+    model.fc = nn.Linear(num_ftrs, 2)
 
     loss_function = nn.MSELoss()
 
@@ -59,7 +62,6 @@ def main():
 
     #must compute sizes and not just input fractions to avoid rounding errors and maintain consistency
     train_dataset, test_dataset = random_split(dataset, [train_size, test_size])
-    print(train_dataset[0])
 
     #I have a quad core processor which is why I put num_workers as 4 but we can vary depending on the hardware we run this on
     train_loader = DataLoader(train_dataset, batch_size=128, shuffle=True, num_workers=4)
@@ -68,6 +70,7 @@ def main():
     num_epochs = 10
     for epoch in range(start_epoch, num_epochs):
         loss_from_train = train(model, train_loader, optimizer, loss_function)
+        print("loss from train:" + str(loss_from_train))
         prediction = test(model, test_loader, optimizer, loss_function)
     
     torch.save(model.state_dict(), 'soccer_bot_model.pth')
@@ -84,18 +87,16 @@ def train(model, train_loader, optimizer, loss_function):
         #only two variables since we currently only have two input states (image, motion), could modify to have more
         #should split up into specified batches of specific size
         image, action = data
-        print(image)
-        print("break")
-        print(action)
        
         #zeros out the gradient for batch
         optimizer.zero_grad()
         #uses model to predict the action, should output an array of predictions
         pred_action = model(image)
-        print(pred_action)
+
+        target_action = torch.stack((action[0], action[1]), dim=1).float()
 
         #Here we use a mean square error to determine how close/far the predictions are from the actual values
-        loss = loss_function(pred_action, action)
+        loss = loss_function(pred_action, target_action)
         #computes gradients
         loss.backward()
         #updates the parameters of the model using the gradients, (parameters are the learnable components)
@@ -117,11 +118,13 @@ def test(model, test_loader, optimizer, loss_function):
         for id, data in enumerate(test_loader):
             #only two variables since we currently only have two input states (image, motion), could modify to have more
             #should split up into specified batches of specific size
-            image, action = data
             #uses model to predict the action, should output an array of predictions
+            image, action = data
             pred_action = model(image)
+
+            target_action = torch.stack((action[0], action[1]), dim=1).float()
             #Here we use a mean square error to determine how close/far the predictions are from the actual values
-            loss = loss_function(pred_action, action)
+            loss = loss_function(pred_action, target_action)
             losses_test.update(loss.detach().cpu().item(), image.size(0))
 
             print(loss)
