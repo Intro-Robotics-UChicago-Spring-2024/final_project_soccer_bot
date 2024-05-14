@@ -101,6 +101,21 @@ class Data_Process():
         return self.images
 
     def get_actions(self):
+        data = self.velocities
+
+        lin_vel = [item[0] for item in data]
+        ang_vel = [item[1] for item in data]
+
+        # normalize using min-max scaling
+        normalized_lin = [(x - min(lin_vel)) / (max(lin_vel) - min(lin_vel)) for x in lin_vel]
+        # print(f"normalized linear: {normalized_lin}")
+        normalized_ang = [(x - min(ang_vel)) / (max(ang_vel) - min(ang_vel)) for x in ang_vel]
+        # print(f"normalized angular: {normalized_ang}")
+
+        normalized_velocities = list(zip(normalized_lin, normalized_ang))
+
+        print(normalized_velocities)
+
         return self.velocities
 
 model = model = torch.hub.load('pytorch/vision:v0.10.0', 'resnet18', pretrained=True)
