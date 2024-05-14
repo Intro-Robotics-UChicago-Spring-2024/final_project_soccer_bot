@@ -51,7 +51,7 @@ class Data_Process():
 
         #Not sure which image type we can use, whether PIL works or not
         self.load_images()
-
+    
     def get_mean_and_std_of_images(self, data_dir, folder):
         images_mean = np.zeros(3)
         images_std = np.zeros(3)
@@ -137,6 +137,13 @@ class Data_Process():
         self.apply_color_jitter()
         return self.images
 
+    def un_normalize_linear_vel(self, val):
+        return ((val * (self.max_lin_val - self.min_lin_vel)) + self.min_lin_vel)
+    
+    def un_normalize_angular_vel(self,val):
+        return ((val * (self.max_ang_val - self.min_ang_vel)) + self.min_ang_vel)   
+        
+
     def get_actions(self):
         data = self.velocities
 
@@ -148,6 +155,12 @@ class Data_Process():
         # print(f"normalized linear: {normalized_lin}")
         normalized_ang = [(x - min(ang_vel)) / (max(ang_vel) - min(ang_vel)) for x in ang_vel]
         # print(f"normalized angular: {normalized_ang}")
+
+        self.min_lin_vel = min(lin_vel)
+        self.max_lin_val = max(lin_vel)
+        self.min_ang_vel = min(ang_vel)
+        self.max_ang_val = max(ang_vel)
+
 
         normalized_velocities = list(zip(normalized_lin, normalized_ang))
 
