@@ -52,6 +52,28 @@ class Data_Process():
         #Not sure which image type we can use, whether PIL works or not
         self.load_images()
 
+    def get_mean_and_std_of_images(self, data_dir, folder):
+        images_mean = np.zeros(3)
+        images_std = np.zeros(3)
+        count = 0
+
+        files = listdir(data_dir+'/'+folder)
+        for file in files:
+            file_path = data_dir+'/'+folder+'/'+file
+            if file.startswith('image'):
+                input_image = Image.open(file_path)
+                
+                input_array = np.array(input_image) / 255.0  
+                
+                images_mean += np.mean(input_array, axis=(0, 1))
+                images_std += np.std(input_array, axis=(0, 1))
+                count += 1
+
+        images_mean = images_mean / count
+        images_std = images_std / count
+
+        return images_mean, images_std
+
         
 
     def load_images(self):
@@ -69,6 +91,8 @@ class Data_Process():
         for folder in top_dir:
             if folder != ".DS_Store" and folder == 'run_1':
                 files = listdir(data_dir+'/'+folder)
+                image_mean, image_std = self.get_mean_and_std_of_images(data_dir, folder)
+
                 for file in files:
                     file_path = data_dir+'/'+folder+'/'+file
                     if file.startswith('image'):
@@ -80,7 +104,7 @@ class Data_Process():
                             transforms.Resize(256),     #change values
                             transforms.CenterCrop(224), #change values
                             transforms.ToTensor(),
-                            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+                            transforms.Normalize(mean=image_mean, std=image_std),
                         ])
 
                         input_tensor = preprocess(input_image)
@@ -89,6 +113,7 @@ class Data_Process():
                         #input_batch = input_tensor.unsqueeze(0) # create a mini-batch as expected by the model
 
                         self.images.append(input_tensor)
+
                     elif file.endswith('.csv'):
                         df = pd.read_csv(file_path, names=['Timestamp', 'Linear Velocity', 'Angular Velocity', 'Quality'], sep=' ')
                         for index, row in df.iterrows():
@@ -97,7 +122,19 @@ class Data_Process():
                 while len(self.velocities) != len(self.images):
                     self.velocities.append(self.velocities[len(self.velocities) - 1])        
 
+    def apply_color_jitter(self):
+        
+        apply_jitter = transforms.Compose([
+            transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),
+        ])
+        
+        # Apply the transformation to each image
+        jittered_images = [apply_jitter(image) for image in self.images]
+        
+        return jittered_images
+
     def get_image(self):
+        self.apply_color_jitter()
         return self.images
 
     def get_actions(self):
