@@ -78,8 +78,8 @@ class MotionModel(object):
         pred_action = self.model(input_tensor)
 
         # get optimal lin and ang velocities
-        opt_lin = pred_action[0]
-        opt_ang = pred_action[1]
+        opt_lin = pred_action[0][0]
+        opt_ang = pred_action[0][1]
 
         twist = Twist()
         twist.linear.x = opt_lin
