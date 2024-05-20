@@ -26,10 +26,16 @@ def main():
     #next we would train the model, training itself will be writen in another function
     #must specify epochs
 
-    #make sure resnet14 is an option
-    model = models.resnet18(pretrained=True)
-    num_ftrs = model.fc.in_features
-    model.fc = nn.Linear(num_ftrs, 2)
+    observed_data = Data_Process()
+    #load datasets, should be represented as (state, action) pair
+    #observations should be images, actions should be linear and angular velocity
+    #need to figure out how to combine
+    image_data = observed_data.get_image()
+    actions = observed_data.get_actions()
+    dataset = merge_data(image_data, actions)
+    observed_data_lin_size, observed_data_ang_size = observed_data.get_ang_lin()
+
+    model = MyModel(observed_data_lin_size + 2, observed_data_ang_size + 2)
 
     loss_function = nn.CrossEntropyLoss()
 
@@ -49,15 +55,6 @@ def main():
     optimizer = torch.optim.SGD(model.parameters(), lr,
                                 momentum=momentum,
                                 weight_decay=weight_decay)
-    
-    observed_data = Data_Process()
-    
-    #load datasets, should be represented as (state, action) pair
-    #observations should be images, actions should be linear and angular velocity
-    #need to figure out how to combine
-    image_data = observed_data.get_image()
-    actions = observed_data.get_actions()
-    dataset = merge_data(image_data, actions)
 
     train_size = int(.8 * len(dataset))
     test_size = len(dataset) - train_size
@@ -76,8 +73,22 @@ def main():
         prediction = test(model, test_loader, optimizer, loss_function)
         print(prediction)
     
-    torch.save(model.state_dict(), 'soccer_bot_model_images_18.pth')
+    torch.save(model.state_dict(), 'soccer_bot_classification_18.pth')
 
+class MyModel(nn.Module):
+    def __init__(self, num_classes1, num_classes2):
+        super(MyModel, self).__init__()
+        self.model_resnet = models.resnet18(pretrained=True)
+        num_ftrs = self.model_resnet.fc.in_features
+        self.model_resnet.fc = nn.Identity()
+        self.fc1 = nn.Linear(num_ftrs, num_classes1)
+        self.fc2 = nn.Linear(num_ftrs, num_classes2)
+
+    def forward(self, x):
+        x = self.model_resnet(x)
+        out1 = self.fc1(x)
+        out2 = self.fc2(x)
+        return out1, out2
 
 def train(model, train_loader, optimizer, loss_function):
     #will tell us the average loss
@@ -94,12 +105,15 @@ def train(model, train_loader, optimizer, loss_function):
         #zeros out the gradient for batch
         optimizer.zero_grad()
         #uses model to predict the action, should output an array of predictions
-        pred_action = model(image)
+        pred_action_lin, pred_action_ang = model(image)
 
-        target_action = torch.stack((action[0], action[1]), dim=1).float()
+        #target_action = torch.stack((action[0], action[1]), dim=1).float()
 
         #Here we use a mean square error to determine how close/far the predictions are from the actual values
-        loss = loss_function(pred_action, target_action)
+        loss_lin = loss_function(pred_action_lin, action[0])
+        loss_ang = loss_function(pred_action_ang, action[1])
+
+        loss = loss_lin + loss_ang
         #computes gradients
         loss.backward()
         #updates the parameters of the model using the gradients, (parameters are the learnable components)
@@ -123,11 +137,16 @@ def test(model, test_loader, optimizer, loss_function):
             #should split up into specified batches of specific size
             #uses model to predict the action, should output an array of predictions
             image, action = data
-            pred_action = model(image)
+            pred_action_lin, pred_action_ang = model(image)
 
-            target_action = torch.stack((action[0], action[1]), dim=1).float()
+            #target_action = torch.stack((action[0], action[1]), dim=1).float()
+
             #Here we use a mean square error to determine how close/far the predictions are from the actual values
-            loss = loss_function(pred_action, target_action)
+            loss_lin = loss_function(pred_action_lin, action[0])
+            loss_ang = loss_function(pred_action_ang, action[1])
+
+            loss = loss_lin + loss_ang
+
             losses_test.update(loss.detach().cpu().item(), image.size(0))
 
     return losses_test.avg
@@ -165,11 +184,12 @@ class Data_Process():
         self.data_dir = '/home/gnakanishi/catkin_ws/src/final_project_soccer_bot/test_data'
         
         self.velocities = []
+        self.lin_vel = []
+        self.ang_vel = []
         self.images = []
 
         #Not sure which image type we can use, whether PIL works or not
         self.load_images()
-        
 
     def load_images(self):
         """
@@ -220,8 +240,8 @@ class Data_Process():
     def get_actions(self):
         data = self.velocities
 
-        lin_vel = [math.round(item[0] * 100) for item in data]
-        ang_vel = [math.round(item[1] * 100) for item in data]
+        self.lin_vel = [round(item[0] * 100) for item in data]
+        self.ang_vel = [round(item[1] * 100) for item in data]
 
         '''
         min_lin_velo = math.ceil(min(lin_vel))
@@ -262,9 +282,21 @@ class Data_Process():
         # print(f"normalized angular: {normalized_ang}")
         '''
 
-        normalized_velocities = list(zip(lin_vel, ang_vel))
+        normalized_velocities = list(zip(self.lin_vel, self.ang_vel))
 
         return normalized_velocities
+
+    def get_ang_lin(self):
+        lin_vel_min = min(self.lin_vel)
+        lin_vel_max = max(self.lin_vel)
+        lin_vel_range = lin_vel_max - lin_vel_min
+
+        ang_vel_min = min(self.ang_vel)
+        ang_vel_max = max(self.ang_vel)
+        ang_vel_range = ang_vel_max - ang_vel_min
+        
+        return lin_vel_range, ang_vel_range
+
 
 
 if __name__ == '__main__':
