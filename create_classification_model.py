@@ -35,7 +35,7 @@ def main():
     dataset = merge_data(image_data, actions)
     observed_data_lin_size, observed_data_ang_size = observed_data.get_ang_lin()
 
-    model = MyModel(observed_data_lin_size + 2, observed_data_ang_size + 2)
+    model = MyModel(observed_data_lin_size + 1, observed_data_ang_size + 1)
 
     loss_function = nn.CrossEntropyLoss()
 
@@ -187,6 +187,8 @@ class Data_Process():
         self.lin_vel = []
         self.ang_vel = []
         self.images = []
+        self.min_lin_vel = 0
+        self.min_ang_vel = 0
 
         #Not sure which image type we can use, whether PIL works or not
         self.load_images()
@@ -236,12 +238,22 @@ class Data_Process():
 
     def get_image(self):
         return self.images
+    
+    def get_min(self):
+        return self.min_lin_vel, self.min_ang_vel
 
     def get_actions(self):
         data = self.velocities
 
         self.lin_vel = [round(item[0] * 100) for item in data]
         self.ang_vel = [round(item[1] * 100) for item in data]
+        self.min_lin_vel = min(self.lin_vel)
+        self.min_ang_vel = min(self.ang_vel)
+        print("min")
+        print(self.min_lin_vel, self.min_ang_vel)
+
+        self.lin_vel = [num + abs(self.min_lin_vel) for num in self.lin_vel]
+        self.ang_vel = [num + abs(self.min_ang_vel) for num in self.ang_vel]
 
         '''
         min_lin_velo = math.ceil(min(lin_vel))
@@ -294,6 +306,7 @@ class Data_Process():
         ang_vel_min = min(self.ang_vel)
         ang_vel_max = max(self.ang_vel)
         ang_vel_range = ang_vel_max - ang_vel_min
+        print(lin_vel_range, ang_vel_range)
         
         return lin_vel_range, ang_vel_range
 
