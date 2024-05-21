@@ -32,7 +32,7 @@ def main():
     #need to figure out how to combine
     image_data = observed_data.get_image()
     actions = observed_data.get_actions()
-    dataset = merge_data(image_data, actions)
+    dataset = SoccerBotDataset(image_data, actions)
     observed_data_lin_size, observed_data_ang_size = observed_data.get_ang_lin()
 
     model = MyModel(observed_data_lin_size + 1, observed_data_ang_size + 1)
@@ -75,6 +75,19 @@ def main():
     
     torch.save(model.state_dict(), 'soccer_bot_classification_18.pth')
 
+class SoccerBotDataset(Dataset):
+    def __init__(self, image, actions, transform=None):
+        self.image = image
+        self.actions = actions
+
+    def __len__(self):
+        return len(self.image)
+
+    def __getitem__(self, idx):
+        image = self.image[idx]
+        action = self.actions[idx]
+        return image, torch.tensor(action, dtype=torch.float32)
+
 class MyModel(nn.Module):
     def __init__(self, num_classes1, num_classes2):
         super(MyModel, self).__init__()
@@ -101,17 +114,19 @@ def train(model, train_loader, optimizer, loss_function):
         #only two variables since we currently only have two input states (image, motion), could modify to have more
         #should split up into specified batches of specific size
         image, action = data
-       
+        lin_v = action[:, 0].long()
+        ang_v = action[:, 1].long()
         #zeros out the gradient for batch
         optimizer.zero_grad()
         #uses model to predict the action, should output an array of predictions
         pred_action_lin, pred_action_ang = model(image)
+        
 
         #target_action = torch.stack((action[0], action[1]), dim=1).float()
 
         #Here we use a mean square error to determine how close/far the predictions are from the actual values
-        loss_lin = loss_function(pred_action_lin, action[0])
-        loss_ang = loss_function(pred_action_ang, action[1])
+        loss_lin = loss_function(pred_action_lin, lin_v)
+        loss_ang = loss_function(pred_action_ang, ang_v)
 
         loss = loss_lin + loss_ang
         #computes gradients
@@ -137,13 +152,15 @@ def test(model, test_loader, optimizer, loss_function):
             #should split up into specified batches of specific size
             #uses model to predict the action, should output an array of predictions
             image, action = data
+            lin_v = action[:, 0].long()
+            ang_v = action[:, 1].long()
             pred_action_lin, pred_action_ang = model(image)
 
             #target_action = torch.stack((action[0], action[1]), dim=1).float()
 
             #Here we use a mean square error to determine how close/far the predictions are from the actual values
-            loss_lin = loss_function(pred_action_lin, action[0])
-            loss_ang = loss_function(pred_action_ang, action[1])
+            loss_lin = loss_function(pred_action_lin, lin_v)
+            loss_ang = loss_function(pred_action_ang, ang_v)
 
             loss = loss_lin + loss_ang
 
