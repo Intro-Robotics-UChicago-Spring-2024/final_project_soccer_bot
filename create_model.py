@@ -55,7 +55,7 @@ def main():
     #need to figure out how to combine
     image_data = observed_data.get_image()
     actions = observed_data.get_actions()
-    dataset = merge_data(image_data, actions)
+    dataset = SoccerBotDataset(image_data, actions)
 
     train_size = int(.8 * len(dataset))
     test_size = len(dataset) - train_size
@@ -93,10 +93,10 @@ def train(model, train_loader, optimizer, loss_function):
         #uses model to predict the action, should output an array of predictions
         pred_action = model(image)
 
-        target_action = torch.stack((action[0], action[1]), dim=1).float()
+        #target_action = torch.stack((action[0], action[1]), dim=1).float()
 
         #Here we use a mean square error to determine how close/far the predictions are from the actual values
-        loss = loss_function(pred_action, target_action)
+        loss = loss_function(pred_action, action)
         #computes gradients
         loss.backward()
         #updates the parameters of the model using the gradients, (parameters are the learnable components)
@@ -122,14 +122,27 @@ def test(model, test_loader, optimizer, loss_function):
             image, action = data
             pred_action = model(image)
 
-            target_action = torch.stack((action[0], action[1]), dim=1).float()
+            #target_action = torch.stack((action[0], action[1]), dim=1).float()
             #Here we use a mean square error to determine how close/far the predictions are from the actual values
-            loss = loss_function(pred_action, target_action)
+            loss = loss_function(pred_action, action)
             losses_test.update(loss.detach().cpu().item(), image.size(0))
 
             print(loss)
 
     return losses_test.avg
+
+class SoccerBotDataset(Dataset):
+    def __init__(self, image, actions, transform=None):
+        self.image = image
+        self.actions = actions
+
+    def __len__(self):
+        return len(self.image)
+
+    def __getitem__(self, idx):
+        image = self.image[idx]
+        action = self.actions[idx]
+        return image, torch.tensor(action, dtype=torch.float32)
 
 def merge_data(image_data, action_data):
     dataset = []
