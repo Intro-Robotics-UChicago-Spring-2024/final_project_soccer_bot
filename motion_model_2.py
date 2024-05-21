@@ -73,7 +73,7 @@ class MotionModel(object):
 
         file_name = 'newest_image.jpg'
         # Save the image to the specified directory
-        cv2.imwrite(os.path.join("", file_name), image)
+        cv2.imwrite(os.path.join("", file_name), self.image)
        
         # process image (change colors, convert to PIL, process)
 
