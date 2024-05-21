@@ -118,7 +118,7 @@ class MotionModel(object):
     def run(self):
         # pass image to model
         while not rospy.is_shutdown(): 
-            if not self.most_recent_image():
+            if not self.most_recent_image:
                 rospy.sleep(3)
             else:
                 pred_action = self.model(self.most_recent_image)

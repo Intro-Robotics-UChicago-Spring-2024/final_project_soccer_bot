@@ -42,7 +42,7 @@ def compute_image_similarity(new_image_path, threshold=0.87):
 
 
     # Get image paths
-    image_paths = get_image_files('/Users/tarachugh/Desktop/robotics/final_project_soccer_bot/end_images')
+    image_paths = get_image_files('end_images')
 
     # Check if the folder contains images
     if not image_paths:
