@@ -134,7 +134,7 @@ class MotionModel(object):
                 opt_ang_unnormalized = self.un_normalize(opt_ang, angular=True)
 
                 print(f"optimal linear velocity - unnormalized: {opt_lin_unnormalized}")
-                print(f"optimal angular velocity - unnormalized": {opt_ang_unnormalized})
+                print(f"optimal angular velocity - unnormalized: {opt_ang_unnormalized}")
                 
                 twist = Twist()
                 twist.linear.x = opt_lin_unnormalized
