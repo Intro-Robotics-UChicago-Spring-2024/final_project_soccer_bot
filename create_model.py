@@ -69,6 +69,7 @@ def main():
 
     num_epochs = 10
     for epoch in range(start_epoch, num_epochs):
+        # print(f"EPOCH: {epoch}")
         loss_from_train = train(model, train_loader, optimizer, loss_function)
         print("loss from train:" + str(loss_from_train))
         prediction = test(model, test_loader, optimizer, loss_function)
@@ -121,6 +122,9 @@ def test(model, test_loader, optimizer, loss_function):
             #uses model to predict the action, should output an array of predictions
             image, action = data
             pred_action = model(image)
+
+            # print(f"PREDICTED: {pred_action}")
+            # print(f"ACTUAL {action}")
 
             #target_action = torch.stack((action[0], action[1]), dim=1).float()
             #Here we use a mean square error to determine how close/far the predictions are from the actual values
@@ -231,7 +235,33 @@ class Data_Process():
         return self.images
 
     def get_actions(self):
+        data = self.velocities
+
+        lin_vel = [item[0] for item in data]
+        ang_vel = [item[1] for item in data]
+
+        print(f"MIN LIN VEL: {min(lin_vel)}")
+        print(f"MAX LIN VEL: {max(lin_vel)}")
+        print(f"MIN ANG VEL: {min(ang_vel)}")
+        print(f"MAX ANG VEL: {max(ang_vel)}")
+
+        # normalize using min-max scaling
+        normalized_lin = [100 * (x - min(lin_vel)) / (max(lin_vel) - min(lin_vel)) for x in lin_vel]
+        # print(f"normalized linear: {normalized_lin}")
+        normalized_ang = [100 * (x - min(ang_vel)) / (max(ang_vel) - min(ang_vel)) for x in ang_vel]
+        # print(f"normalized angular: {normalized_ang}")
+
+        self.min_lin_vel = min(lin_vel)
+        self.max_lin_val = max(lin_vel)
+        self.min_ang_vel = min(ang_vel)
+        self.max_ang_val = max(ang_vel)
+
+
+        normalized_velocities = list(zip(normalized_lin, normalized_ang))
+        self.velocities = normalized_velocities
+
         return self.velocities
+
 
 
 if __name__ == '__main__':
