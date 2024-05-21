@@ -15,6 +15,8 @@ from torchvision import transforms
 from torchvision.transforms import v2
 import numpy as np
 import torchvision.models as models
+from end_classifier import compute_image_similarity
+
 
 
 """
@@ -45,7 +47,8 @@ class MotionModel(object):
             "camera/rgb/image_raw", Image, self.image_callback
         )
         self.r = rospy.Rate(10.0)
-        rospy.on_shutdown(self.save_data)
+        rospy.on_shutdown(self.stop)
+        self.most_recent_image = None
 
 
         # initialize model
@@ -58,7 +61,7 @@ class MotionModel(object):
         self.model.load_state_dict(torch.load("soccer_bot_model.pth"))
         print('here2')
         self.model.eval()
-        self.most_recent_image = None
+        
         print('here3')
         rospy.sleep(5)
         print('here4')
@@ -67,6 +70,10 @@ class MotionModel(object):
     def image_callback(self, msg):
         print('here')
         self.image = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
+
+        file_name = 'newest_image.jpg'
+        # Save the image to the specified directory
+        cv2.imwrite(os.path.join("", file_name), image)
        
         # process image (change colors, convert to PIL, process)
 
@@ -84,17 +91,6 @@ class MotionModel(object):
         input_tensor = preprocess(im_pil)
         self.most_recent_image = input_tensor
 
-        # # pass image to model
-        # pred_action = self.model(input_tensor)
-
-        # # get optimal lin and ang velocities
-        # opt_lin = pred_action[0][0]
-        # opt_ang = pred_action[0][1]
-
-        # twist = Twist()
-        # twist.linear.x = opt_lin
-        # twist.angular.z = opt_ang
-        # self.twist_pub.publish(twist)
     
     def un_normalize(self, num, angular=False):
         """
@@ -110,9 +106,11 @@ class MotionModel(object):
         max_angular = .2
 
         if angular:
-            return (((num / 100.00) * (max_angular - min_angular)) + min_angular)
+            # return (((num / 100.00) * (max_angular - min_angular)) + min_angular)
+            return (((num / 1.0) * (max_angular - min_angular)) + min_angular)
+
         else:
-            return (((num / 100.00) * (max_linear - min_linear)) + min_linear)
+            return (((num / 1.0) * (max_linear - min_linear)) + min_linear)
 
 
 
@@ -124,13 +122,19 @@ class MotionModel(object):
                 rospy.sleep(3)
             else:
                 pred_action = self.model(self.most_recent_image)
+                if compute_image_similarity("newest_image.jpg")[1]:
+                    self.stop()
+                    rospy.signal_shutdown('Classifier signaled shutdown')
 
                 # get optimal lin and ang velocities
                 opt_lin = pred_action[0][0]
                 opt_ang = pred_action[0][1]
 
                 opt_lin_unnormalized = self.un_normalize(opt_lin)
-                opt_ang_unnormalized = self.un_normalize(opt_ang)
+                opt_ang_unnormalized = self.un_normalize(opt_ang, angular=True)
+
+                print(f"optimal linear velocity - unnormalized: {opt_lin_unnormalized}")
+                print(f"optimal angular velocity - unnormalized": {opt_ang_unnormalized})
                 
                 twist = Twist()
                 twist.linear.x = opt_lin_unnormalized
