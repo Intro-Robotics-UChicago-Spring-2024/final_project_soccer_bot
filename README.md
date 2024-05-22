@@ -1,4 +1,3 @@
-<img width="371" alt="Screenshot 2024-05-22 at 12 22 40 AM" src="https://github.com/Intro-Robotics-UChicago-Spring-2024/final_project_soccer_bot/assets/118474712/763eaf04-e8b1-48ec-a225-3a02945ee6f9">![ezgif-6-9234e548ec](https://github.com/Intro-Robotics-UChicago-Spring-2024/final_project_soccer_bot/assets/118474712/f115badc-26c8-4c14-b74d-f8bb98c1f90c)
 # Project Description: 
 ###Describe the goal of your project, why it's interesting, what you were able to make your robot do, and what the main components of your project are and how they fit together - please include diagrams and gifs when appropriate
 
@@ -13,14 +12,18 @@ Before we could start collecting data, we had to build an attachment for the rob
 
 
 Testing different types of balls:
+
 ![dodgeball](https://github.com/Intro-Robotics-UChicago-Spring-2024/final_project_soccer_bot/assets/118474712/4c5117ff-e4a7-47f6-81a8-f4afceaa87c9)
+
 ![ezgif-6-cb15979024](https://github.com/Intro-Robotics-UChicago-Spring-2024/final_project_soccer_bot/assets/118474712/0d4a32be-521d-476b-bcab-2bd917d7d3cd)
 
 
 Wiffle ball:
+
 ![wiffle](https://github.com/Intro-Robotics-UChicago-Spring-2024/final_project_soccer_bot/assets/118474712/01c7934c-7f6d-4a5a-b224-dc9aa2982684)
 
 Attachment arm:
+
 <img width="371" alt="Screenshot 2024-05-22 at 12 22 40 AM" src="https://github.com/Intro-Robotics-UChicago-Spring-2024/final_project_soccer_bot/assets/118474712/06036535-76db-4b53-8e76-bd2d458729ec">
 
 
