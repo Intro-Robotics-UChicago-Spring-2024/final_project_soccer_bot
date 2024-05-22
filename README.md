@@ -1,23 +1,28 @@
 
-# Project Description: Describe the goal of your project, why it's interesting, what you were able to make your robot do, and what the main components of your project are and how they fit together - please include diagrams and gifs when appropriate
+# Project Description: 
+###Describe the goal of your project, why it's interesting, what you were able to make your robot do, and what the main components of your project are and how they fit together - please include diagrams and gifs when appropriate
 
 TO DO
 
 
 
-# System Architecture: Describe in detail the robotics algorithm you implemented and each major component of your project, highlight what pieces of code contribute to these main components
+# System Architecture:
+###Describe in detail the robotics algorithm you implemented and each major component of your project, highlight what pieces of code contribute to these main components
 
 TO DO
 
-# ROS Node Diagram: Please include a visual diagram representing all of the ROS nodes, ROS topics, and publisher/subscriber connections present in your final project.
+# ROS Node Diagram: 
+###Please include a visual diagram representing all of the ROS nodes, ROS topics, and publisher/subscriber connections present in your final project.
 
 TO DO
 
-# Execution: Describe how to run your code, e.g., step-by-step instructions on what commands to run in each terminal window to execute your project code.
+# Execution: 
+###Describe how to run your code, e.g., step-by-step instructions on what commands to run in each terminal window to execute your project code.
 
 TO DO
 
-# Challenges, Future Work, and Takeaways: These should take a similar form and structure to how you approached these in the previous projects (1 paragraph each for the challenges and future work and a few bullet points for takeaways)
+# Challenges, Future Work, and Takeaways: 
+###These should take a similar form and structure to how you approached these in the previous projects (1 paragraph each for the challenges and future work and a few bullet points for takeaways)
 
 ## Challenges
 One of the problems we faced in training our behavioral cloning models (neural networks) was that initially, the outputs and predictions we were seeing were not at all in line with the data we took, especially in terms of the ratio between the linear and angular velocities at each timestep. In the data we took, most of the ‘expert’ runs were straight-line paths to the goal, with linear velocities in the -.02 m/s to 0.6 m/s range and angular velocities in the -0.2 radians/s to 0.2 radians/s range. The vast majority of the time, the magnitude of the angular velocity was well below that of the linear velocity. However, we found that this was not reflected in our model’s outputs. After looking more closely at the data that we were feeding into the model and consulting the TAs for help, we found that we would need to normalize our input data. This would scale both the linear and angular velocities to be between 0 and 1, which would put them on ‘equal footing’ when entering the model, and it would mean that the loss function would factor them with equal importance. This change helped us see more physically meaningful predictions from our model. Another challenge that we faced was that all of our models (we tried classification/binning models as well as models that predicted velocities on a continuous scale) seemed to have trouble correctly predicting that the robot was meant to stop near the goal. We hypothesize that this is because when we were collecting data from expert runs and teleoping the robot, we stopped data collection before or immediately after stopping the robot (we were more focused on getting data for the robot’s path to the goal, not for the robot stopping at the goal), and thus there were only a few data points with images corresponding to 0 linear and angular velocities. As a back up mechanism to try to stop the robot at the goal, we decided to use another classification model that would be able to take in an image and decide if the image was taken at the goal or not (and if so, it would send a cmd_vel message to stop the robot). We used a pretrained PyTorch ResNet50 model to extract the features from the last image that the robot captured in each expert run (where the robot would be at the goal), then when we inputted an image it would compute the cosine similarity of the inputted image to the set of training images, and if the images were similar enough, it would stop the robot. This added an extra layer of protection to our implementation, so that the robot would not hit the wall, and still allowed us to use image-related models (rather than lidar data or teleop-ing) to do this.
