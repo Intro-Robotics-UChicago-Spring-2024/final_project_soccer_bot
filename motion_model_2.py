@@ -16,6 +16,10 @@ from torchvision.transforms import v2
 import numpy as np
 import torchvision.models as models
 from end_classifier import compute_image_similarity
+import warnings
+
+warnings.filterwarnings("ignore")
+
 
 
 
@@ -49,26 +53,20 @@ class MotionModel(object):
         self.r = rospy.Rate(10.0)
         rospy.on_shutdown(self.stop)
         self.most_recent_image = None
+        self.most_recent_image_set = False
 
 
         # initialize model
-        print('here-1')
         self.model = torch.hub.load('pytorch/vision:v0.10.0', 'resnet18', pretrained=True)
-        print('here0')
         num_ftrs = self.model.fc.in_features
         self.model.fc = nn.Linear(num_ftrs, 2)
-        print('here1')
-        self.model.load_state_dict(torch.load("soccer_bot_model.pth"))
-        print('here2')
+        self.model.load_state_dict(torch.load("soccer_bot_model_norm_vel.pth"))
         self.model.eval()
         
-        print('here3')
         rospy.sleep(5)
-        print('here4')
 
 
     def image_callback(self, msg):
-        print('here')
         self.image = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
 
         file_name = 'newest_image.jpg'
@@ -90,6 +88,7 @@ class MotionModel(object):
 
         input_tensor = preprocess(im_pil)
         self.most_recent_image = input_tensor
+        self.most_recent_image_set = True
 
     
     def un_normalize(self, num, angular=False):
@@ -118,29 +117,32 @@ class MotionModel(object):
     def run(self):
         # pass image to model
         while not rospy.is_shutdown(): 
-            if not self.most_recent_image:
+            if not self.most_recent_image_set:
                 rospy.sleep(3)
             else:
-                pred_action = self.model(self.most_recent_image)
-                if compute_image_similarity("newest_image.jpg")[1]:
+                pred_action = self.model(self.most_recent_image.unsqueeze(0))
+                if compute_image_similarity("/home/tarachugh/catkin_ws/src/final_project_soccer_bot/newest_image.jpg")[1]:
+                    print("STOPPING")
                     self.stop()
                     rospy.signal_shutdown('Classifier signaled shutdown')
+                else:
+                    # get optimal lin and ang velocities
+                    opt_lin = pred_action[0][0]
+                    opt_ang = pred_action[0][1]
 
-                # get optimal lin and ang velocities
-                opt_lin = pred_action[0][0]
-                opt_ang = pred_action[0][1]
+                    # opt_lin_unnormalized = self.un_normalize(opt_lin)
+                    # opt_ang_unnormalized = self.un_normalize(opt_ang, angular=True)
+                    opt_lin_unnormalized = opt_lin
+                    opt_ang_unnormalized = opt_ang
 
-                opt_lin_unnormalized = self.un_normalize(opt_lin)
-                opt_ang_unnormalized = self.un_normalize(opt_ang, angular=True)
-
-                print(f"optimal linear velocity - unnormalized: {opt_lin_unnormalized}")
-                print(f"optimal angular velocity - unnormalized: {opt_ang_unnormalized}")
-                
-                twist = Twist()
-                twist.linear.x = opt_lin_unnormalized
-                twist.angular.z = opt_ang_unnormalized
-                self.twist_pub.publish(twist)
-                self.r.sleep()
+                    print(f"optimal linear velocity - unnormalized: {opt_lin_unnormalized}")
+                    print(f"optimal angular velocity - unnormalized: {opt_ang_unnormalized}")
+                    
+                    twist = Twist()
+                    twist.linear.x = opt_lin_unnormalized
+                    twist.angular.z = opt_ang_unnormalized
+                    self.twist_pub.publish(twist)
+                    self.r.sleep()
     
     def stop(self):
         self.twist_pub.publish(Twist(linear=Vector3(0, 0, 0), angular=Vector3(0, 0, 0)))
