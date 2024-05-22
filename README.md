@@ -1,8 +1,36 @@
-
+<img width="371" alt="Screenshot 2024-05-22 at 12 22 40 AM" src="https://github.com/Intro-Robotics-UChicago-Spring-2024/final_project_soccer_bot/assets/118474712/763eaf04-e8b1-48ec-a225-3a02945ee6f9">![ezgif-6-9234e548ec](https://github.com/Intro-Robotics-UChicago-Spring-2024/final_project_soccer_bot/assets/118474712/f115badc-26c8-4c14-b74d-f8bb98c1f90c)
 # Project Description: 
 ###Describe the goal of your project, why it's interesting, what you were able to make your robot do, and what the main components of your project are and how they fit together - please include diagrams and gifs when appropriate
 
-TO DO
+The goal of our project (“Soccer Bot”) was to have a robot learn to push a ball into a goal via an optimal path, as learned from expert demonstrations. Soccer bot uses a behavioral cloning approach to determine the optimal action at each state. At each timestamp, the robot passes the image from its camera feed into a model that predicts the angular and linear velocity needed to navigate towards the goal, and these velocities are passed to the robot via a Twist message on the cmd_vel topic. We were able to train a model that successfully navigated the robot and ball to the goal in linear paths from multiple starting points/angles, pushed the ball into the goal, and stopped a safe distance away from the goal. Notably, our implementation does not use any LiDAR data, teleoping, or real-time image processing to determine where it is or what action it needs to take; it simply passes images from its camera into our model, and takes action accordingly. Our main goals were (1) to learn how to implement a behavioral cloning algorithm, (2) process camera and cmd_vel data to train a neural network, and (3) be able to show that our model successfully led to the robot being able to push the ball into the goal. 
+
+We thought that a behavioral cloning algorithm would be interesting to learn about and implement, because of the nature of its reward system. Behavioral cloning is a type of imitation learning algorithm, which is a type of reinforcement learning where the explicit reward function is not known but is learned through “expert demonstrations.” In the past projects from this class (like the q-learning project), the reward function was known and could be explicitly calculated when the algorithm was deciding which next step would be optimal, but this is not possible in a behavioral cloning algorithm. In our case, the expert demonstrations were us teleop-ing the robot to push the ball into the goal from many different starting points. Behavioral supervised learning to determine a policy Π that imitates the expert, and the goal is to minimize the difference between the learned policy and the expert demonstration. It essentially solves this optimization problem:
+
+
+The main components of our project were (1) data collection, (2) training our neural network model, and (3) determining the optimal action at each step (using our model and the physical robot). 
+
+Before we could start collecting data, we had to build an attachment for the robot that pushes the ball ahead of the robot, so that the camera can see the ball while it pushes it. After iterating on many prototypes, we were able to make an attachment out of a paper towel roll, an index card, two markers, and two rulers, which could successfully hold and push the ball, and allow the ball to be far enough in front of the camera to be seen by the camera. We also tried out multiple types of balls to find one whose dynamics met the needs of our system, and we settled on a wiffle ball. The wiffle ball is heavy enough to not roll away while the robot is pushing it, and it is brightly colored so the camera can more easily identify it.
+
+
+Testing different types of balls:
+![dodgeball](https://github.com/Intro-Robotics-UChicago-Spring-2024/final_project_soccer_bot/assets/118474712/4c5117ff-e4a7-47f6-81a8-f4afceaa87c9)
+![ezgif-6-cb15979024](https://github.com/Intro-Robotics-UChicago-Spring-2024/final_project_soccer_bot/assets/118474712/0d4a32be-521d-476b-bcab-2bd917d7d3cd)
+
+
+Wiffle ball:
+![wiffle](https://github.com/Intro-Robotics-UChicago-Spring-2024/final_project_soccer_bot/assets/118474712/01c7934c-7f6d-4a5a-b224-dc9aa2982684)
+
+Attachment arm:
+<img width="371" alt="Screenshot 2024-05-22 at 12 22 40 AM" src="https://github.com/Intro-Robotics-UChicago-Spring-2024/final_project_soccer_bot/assets/118474712/06036535-76db-4b53-8e76-bd2d458729ec">
+
+
+
+
+For the data collection part, we collected data from “expert” runs teleoping the robot to push the ball into the goal. At each timestamp, we stored the image from the robot’s camera and its simultaneous angular and linear velocities. We did this for 25 runs, and collected around 200 data points from each run (pictures and corresponding velocities); these runs all had different starting points and trajectories toward the goal. 
+
+Then, using the data collected as our “expert” runs, we trained the network with the robot’s camera feed and cmd_vel messages at different time steps. We used PyTorch’s ResNet-18 (18-layers deep CNN) and trained it with 80% of our data. In order to train this network, we first had to process the data by normalizing the images and velocities. Then, we initialized the model and the Mean Squared Error loss function, trained the model, then tested/validated the model using the 20% of data we had set aside for testing. We trained two different models, one that gives data using classification and one that gives data based on the error that the predicted value has from the target. For each of these model types, we trained many models with different parameters (like different input datasets and numbers of epochs) so that we could choose the most successful one.
+
+Lastly, we created a motion model, which sets up an image callback function which carries out the preferred behavior at each timestep. At each tilmestep, we pass the image to the trained neural net, which returns values for the optimal angular and linear velocities, then we publish a corresponding twist message. We noticed that our model was not able to consistently stop the robot when it got close enough to the goal (see the ‘Challenges’ section for more on this), so as a back up strategy to try to stop the robot at the goal, we decided to use another classification model that would be able to take in an image and decide if the image was taken at the goal or not (and if so, it would send a cmd_vel message to stop the robot). This helped ensure that the robot did not crash into the wall, and also allowed us to stick to one of the goals of our project, which was to use only camera data to decide the robots actions.
 
 
 
