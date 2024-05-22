@@ -41,12 +41,16 @@ Lastly, we created a motion model, which sets up an image callback function whic
 ###Describe in detail the robotics algorithm you implemented and each major component of your project, highlight what pieces of code contribute to these main components
 
 ## 1. Data Collection: (TO DO)
+
 (add in data collection system architecture section)
 
-##2. Neural Network (TO DO)
+
+## 2. Neural Network (TO DO)
+
 (add in neural network system architecture section)
 
-##3. Motion Model
+
+## 3. Motion Model
 
 The code for this is in motion_model_2.py. This file has a MotionModel class, which sets up a rospy node, with a subscriber to the camera/rgb/image_raw topic and a publisher to the cmd_vel topic. It also initializes our behavioral cloning model (from the neural network that we described above). 
 
