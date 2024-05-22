@@ -14,21 +14,13 @@ import numpy as np
 from PIL import Image
 
 def main():
-    #load test data and split into train and validation, in this instance it would be the expert runs
-    #make sure to process the data so its ready for consumtion
-
-    #here is where we would load the model and loss function
-    #model = resent model
-    #loss_function = loss function that I would have to create
-
-    #next we would train the model, training itself will be writen in another function
-    #must specify epochs
-
-    #make sure resnet14 is an option
+    #load model
     model = torch.hub.load('pytorch/vision:v0.10.0', 'resnet18', pretrained=True)
+    #modify the output layer to produce two outputs
     num_ftrs = model.fc.in_features
     model.fc = nn.Linear(num_ftrs, 2)
 
+    #using mean squared error as loss.
     loss_function = nn.MSELoss()
 
     #need to change and look which one is best for us
@@ -36,18 +28,13 @@ def main():
     lr = 1.0e-2
     momentum = 0.9
     weight_decay = 1.0e-4
-    batchsize = 64
-    batchsize_valid = 64
-    start_epoch = 0
-    epochs      = 50000
-    nbatches_per_epoch = int(epochs/batchsize)
-    nbatches_per_valid = int(epochs/batchsize_valid)
 
-    #need to change and figure out which one is best for us
+    #optimizer to run gradients
     optimizer = torch.optim.SGD(model.parameters(), lr,
                                 momentum=momentum,
                                 weight_decay=weight_decay)
     
+    #runs class to get data from dataset
     observed_data = Data_Process()
     
     #load datasets, should be represented as (state, action) pair
@@ -57,6 +44,7 @@ def main():
     actions = observed_data.get_actions()
     dataset = SoccerBotDataset(image_data, actions)
 
+    #splits dataset into t
     train_size = int(.8 * len(dataset))
     test_size = len(dataset) - train_size
 
@@ -64,23 +52,26 @@ def main():
     train_dataset, test_dataset = random_split(dataset, [train_size, test_size])
 
     #I have a quad core processor which is why I put num_workers as 4 but we can vary depending on the hardware we run this on
+    #Splits data to be ready to be consumed by model
     train_loader = DataLoader(train_dataset, batch_size=128, shuffle=True, num_workers=4)
     test_loader = DataLoader(test_dataset, batch_size=128, shuffle=True, num_workers=4)
 
     num_epochs = 10
-    for epoch in range(start_epoch, num_epochs):
-        # print(f"EPOCH: {epoch}")
+
+    #trains and tests model for specified number of epochs
+    for epoch in range(0, num_epochs):
         loss_from_train = train(model, train_loader, optimizer, loss_function)
         print("loss from train:" + str(loss_from_train))
         prediction = test(model, test_loader, optimizer, loss_function)
     
+    #saves model
     torch.save(model.state_dict(), 'soccer_bot_model.pth')
 
-
+#Training function
 def train(model, train_loader, optimizer, loss_function):
     #will tell us the average loss
     losses = AverageMeter()
-    
+    #sets model into train mode
     model.train()
 
     #data loader should contain batches of current images and current 
@@ -109,11 +100,12 @@ def train(model, train_loader, optimizer, loss_function):
 
     return losses.avg
 
-
-def test(model, test_loader, optimizer, loss_function):
+#test function for the model
+def test(model, test_loader, loss_function):
     losses_test = AverageMeter()
+    #sets it to evaluation mode
     model.eval()
-
+    #makes sure that gradients dont update model
     with torch.no_grad():
         #data loader should contain batches of current images and current 
         for id, data in enumerate(test_loader):
@@ -123,10 +115,6 @@ def test(model, test_loader, optimizer, loss_function):
             image, action = data
             pred_action = model(image)
 
-            # print(f"PREDICTED: {pred_action}")
-            # print(f"ACTUAL {action}")
-
-            #target_action = torch.stack((action[0], action[1]), dim=1).float()
             #Here we use a mean square error to determine how close/far the predictions are from the actual values
             loss = loss_function(pred_action, action)
             losses_test.update(loss.detach().cpu().item(), image.size(0))
@@ -135,6 +123,7 @@ def test(model, test_loader, optimizer, loss_function):
 
     return losses_test.avg
 
+#makes the data into dataset because its the type that dataloader expects
 class SoccerBotDataset(Dataset):
     def __init__(self, image, actions, transform=None):
         self.image = image
@@ -147,14 +136,6 @@ class SoccerBotDataset(Dataset):
         image = self.image[idx]
         action = self.actions[idx]
         return image, torch.tensor(action, dtype=torch.float32)
-
-def merge_data(image_data, action_data):
-    dataset = []
-
-    for index, image in enumerate(image_data):
-        dataset.append((image, action_data[index]))
-
-    return dataset
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""
@@ -173,6 +154,7 @@ class AverageMeter(object):
         self.count += n
         self.avg = self.sum / self.count
 
+#Gets/initializes the data from the data folder
 class Data_Process():
     
     def __init__(self):
@@ -231,9 +213,11 @@ class Data_Process():
                 while len(self.velocities) != len(self.images):
                     self.velocities.append(self.velocities[len(self.velocities) - 1])        
 
+    #returns images
     def get_image(self):
         return self.images
 
+    #returns normalized actions
     def get_actions(self):
         data = self.velocities
 
