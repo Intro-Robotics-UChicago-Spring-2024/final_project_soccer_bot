@@ -81,7 +81,7 @@ def compute_image_similarity(
         cosine_sim(new_image_features, features) for features in features_list
     ]
 
-    # Calculate mean similarity score (out of 100).
+    # Calculate mean similarity score.
     mean_similarity_score = sum(similarities) / len(similarities)
 
     # Determine if new image is similar enough
