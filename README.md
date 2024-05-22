@@ -17,9 +17,20 @@ TO DO
 TO DO
 
 # Execution: 
-###Describe how to run your code, e.g., step-by-step instructions on what commands to run in each terminal window to execute your project code.
+In order to train our models (only needs to be done once):
+- Non-Classifier Model (predicts velocities on a continuous scale):
+    - Run create_model.py (i.e. with “python3 create_model.py”), and make sure to change self.data_dir (which is now set to “self.data_dir = '/home/gnakanishi/catkin_ws/src/final_project_soccer_bot/test_data’” to the directory that holds the data for each run, where each run’s folder includes all of the pictures for that run and the csv of velocities for that run)
+- Classifier Model (bins velocities):
+    - Run create_classification_model.py (i.e. with “python3 create_classification_model.py”), and make sure to change self.data_dir (which is now set to “self.data_dir = '/home/gnakanishi/catkin_ws/src/final_project_soccer_bot/test_data’” to the directory that holds the data for each run, where each run’s folder includes all of the pictures for that run and the csv of velocities for that run)
 
-TO DO
+
+In order to run the motion model (test the code with the ball/goal setup):
+- Terminal 1: roscore
+- Terminal 2: ssh into the robot’s raspberry pi, set_ip to your machine’s address, bringup
+- Terminal 3: ssh into the robot’s raspberry pi, set_ip to your machine’s address, bringup_cam
+- Terminal 4: rosrun image_transport republish compressed in:=raspicam_node/image raw out:=camera/rgb/image_raw
+- Terminal 5: rosrun final_project_soccer_bot motion_model_2.py
+    - In the line that reads “if compute_image_similarity("/home/tarachugh/catkin_ws/src/final_project_soccer_bot/newest_image.jpg”)[1]:”, you will need to change the file path to be the path to your final_project_soccer_bot directory (motion_model_2.py will create a file called newest_image.jpg there)
 
 # Challenges, Future Work, and Takeaways: 
 ###These should take a similar form and structure to how you approached these in the previous projects (1 paragraph each for the challenges and future work and a few bullet points for takeaways)
