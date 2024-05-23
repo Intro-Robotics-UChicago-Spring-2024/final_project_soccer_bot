@@ -25,7 +25,7 @@ def main():
 
     #next we would train the model, training itself will be writen in another function
     #must specify epochs
-
+    print("here")
     observed_data = Data_Process()
     #load datasets, should be represented as (state, action) pair
     #observations should be images, actions should be linear and angular velocity
@@ -47,7 +47,7 @@ def main():
     batchsize = 64
     batchsize_valid = 64
     start_epoch = 0
-    epochs      = 50000
+    epochs      = 20
     nbatches_per_epoch = int(epochs/batchsize)
     nbatches_per_valid = int(epochs/batchsize_valid)
 
@@ -66,14 +66,15 @@ def main():
     train_loader = DataLoader(train_dataset, batch_size=128, shuffle=True, num_workers=4)
     test_loader = DataLoader(test_dataset, batch_size=128, shuffle=True, num_workers=4)
 
-    num_epochs = 10
+    num_epochs = 20
     for epoch in range(start_epoch, num_epochs):
         loss_from_train = train(model, train_loader, optimizer, loss_function)
+        print("\n epoch " + str(epoch))
         print("loss from train:" + str(loss_from_train))
         prediction = test(model, test_loader, optimizer, loss_function)
         print(prediction)
     
-    torch.save(model.state_dict(), 'soccer_bot_classification_18.pth')
+    torch.save(model.state_dict(), 'classification_20_epochs_2.pth')
 
 class SoccerBotDataset(Dataset):
     def __init__(self, image, actions, transform=None):
@@ -198,7 +199,7 @@ class Data_Process():
     def __init__(self):
 
         ###need to change folder every time, directory where photos and csv is
-        self.data_dir = '/home/gnakanishi/catkin_ws/src/final_project_soccer_bot/test_data'
+        self.data_dir = '/home/lilaryan/catkin_ws/src/final_test_data'
         
         self.velocities = []
         self.lin_vel = []

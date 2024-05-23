@@ -56,6 +56,9 @@ class MotionModel(object):
         print('here2')
         self.model.eval()
         print('here3')
+
+        self.image = None
+
         rospy.sleep(5)
         print('here4')
 
@@ -79,8 +82,10 @@ class MotionModel(object):
 
         input_tensor = preprocess(im_pil)
 
+        self.image = input_tensor
+
         # pass image to model
-        pred_action = self.model(input_tensor)
+        pred_action = self.model(input_tensor.unsqueeze(0))
 
         # get optimal lin and ang velocities
         opt_lin = pred_action[0][0]
@@ -91,8 +96,35 @@ class MotionModel(object):
         twist.angular.z = opt_ang
         self.twist_pub.publish(twist)
 
+    # def send_twist(self):
+    #     if self.image is not None:
+            
+    #         # pass image to model
+    #         pred_action = self.model(self.image)
+
+    #         # get optimal lin and ang velocities
+    #         opt_lin = pred_action[0][0]
+    #         opt_ang = pred_action[0][1]
+
+
+    #     for i in range(5):
+    #         twist = Twist()
+    #         twist.linear.x = opt_lin
+    #         twist.angular.z = opt_ang
+    #         self.twist_pub.publish(twist)
+    #         rospy.Rate(10).sleep()
+
+    #     for i in range(2):
+    #         # publish stop message
+    #         stop_twist = Twist()
+    #         self.twist_pub.publish(stop_twist)
+
+    # def run(self):
+    #     while True:
+    #         self.send_twist()
 
 if __name__ == "__main__":
     model = MotionModel()
+    # model.run()
     rospy.spin()
 

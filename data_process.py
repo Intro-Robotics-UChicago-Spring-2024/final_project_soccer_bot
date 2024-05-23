@@ -17,7 +17,7 @@ class Data_Process():
     def __init__(self):
 
         ###need to change folder every time, directory where photos and csv is
-        self.data_dir = '/home/gaversa/catkin_ws/src/final_project_soccer_bot/data/data_coll_5_9'
+        self.data_dir = '/home/lilaryan/catkin_ws/src/final_test_data'
 
         #Not sure which image type we can use, whether PIL works or not
         self.load_images()
