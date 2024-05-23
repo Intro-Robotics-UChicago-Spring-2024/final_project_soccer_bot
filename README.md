@@ -108,8 +108,10 @@ One goal for the future would be to make the robot find the ball or goal when it
 
 Lastly, a future goal of our project could be to have the robot learn from and imitate more complicated (swerving) trajectories. We collected data from swerving trajectories and trained our model on it, but it seems that the model outputs tend to have the robot always move in a straight line to the goal. In order to have the model successfully learn to move in swerving trajectories, perhaps we would need to reward the model differently for predicting these trajectories (trajectories with larger angular velocities) in order to encourage the model to output such trajectories.
 
-## Takeaways (TO DO)
-TO DO
+## Takeaways
+- We learned about the importance of the training data in a machine learning algorithm. As we saw in our demo, there were cases that our algorithm was not well trained on, like when the ball was not in front of the robot or when the ball was removed from the arm. We now know that we need to train on more diverse data for this type of algorithm to handle edge cases.
+- We also learned about working on a large project with a group. When we were working on different components, we had to catch up on other group members' progress in order to work on the next parts. We also had to manage the changes everyone was making to the code and make sure we were merging it together well.
+- It was also beneficial to develop the project, deliverables, and implementation plan on our own. Having to create the project instead of just following given directions made us learn how to accomplish a project with more independence and responsibility.
 
 
 
