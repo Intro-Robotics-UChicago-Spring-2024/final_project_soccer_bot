@@ -40,9 +40,34 @@ Lastly, we created a motion model, which sets up an image callback function whic
 # System Architecture:
 ###Describe in detail the robotics algorithm you implemented and each major component of your project, highlight what pieces of code contribute to these main components
 
-TO DO
+## 1. Data Collection: (TO DO)
 
-# ROS Node Diagram: 
+(add in data collection system architecture section)
+
+
+## 2. Neural Network (TO DO)
+
+(add in neural network system architecture section)
+
+
+## 3. Motion Model
+
+The code for this is in motion_model_2.py. This file has a MotionModel class, which sets up a rospy node, with a subscriber to the camera/rgb/image_raw topic and a publisher to the cmd_vel topic. It also initializes our behavioral cloning model (from the neural network that we described above). 
+
+The stop_bot method is used to send a stopping Twist message to the robot (in the case of a backup ‘emergency stop’ when the model does not predict the robot should stop, and it is about to crash into the wall). The un_normalize method is used to convert the output of the model prediction back to its un-normalized velocities which are the correct magnitude/scale to be passed to the robot in a Twist message.
+
+In the image_callback method, the image is converted to a cv2 image, which is then saved to a file called newest_img.jpg. It must be saved to a file in order for the code in end_classifier.py to work correctly. Then,  the image is processed - its colors are converted to RGB, and the image is transformed to a  tensor, with a new size and it is normalized. This is necessary for the image to match the format of the data that we used to train our neural network, and to match the expected input to our model. 
+
+The ‘run’ method has the main loop that is run once every cycle (the node is set up to run at a rate of 10Hz, so the loop runs every 1/10 second). This method first checks if the image callback function has ever been called, and if not it sleeps for a few seconds to wait for the image data to start being populated. Once photos are being received from the camera, this method passes the most recent photograph into the model to predict the linear and angular velocities that the robot should follow at this timestep. It puts those in a Twist object and publishes that to the cmd_vel topic. The ‘run’ method also uses a backup strategy to ensure that the robot does indeed stop when it gets close enough to the goal. Using the saved image (from the image_callback function), it passes that image to the compute_image_similarity function from end_classifier.py, and if the image is close enough to the set of images from the expert runs where the robot has reached the goal, the robot is stopped.
+
+End_classifier.py includes a function that takes in a path to an image taken on the robot's camera, and it compares it to a dataset of images that we put together (the last image from each of our expert runs). If the image is similar enough to one in the dataset, we determine that the robot has reached the goal (and should stop). This is a backup strategy in case our main model does not make the robot stop at the goal, and we implemented this so that the robot would not crash into the wall. In this function, first the PyTorch reset 50 (50-layer CNN model) is loaded in, in a pre-trained state. The classification layer is removed and the model is set to evaluation mode, as we are just using this to extract features from images. For all of the files in the end_images folder (which includes the last image from each expert run, where the robot is at the goal), features are extracted using the resnet50 model. This feature extraction happens through first preprocessing the image (changing its size, type, and normalizing it to match the expected inputs to the resnet50 model) Then, features are extracted from the image that we are trying to classify. For each image in the end_images folder, the cosine similarity is computed between that image and the image we are trying to classify. We used the cosine_similarity function from the sklearn.metrics.pairwise library to do this. Cosine similarity is a way to measure how similar two vectors are. It is calculated as the dot product of the vectors over the product of their magnitudes. Here, the features of the images are stored in vectors, so we can compute the cosine similarity of them like we would with purely numerical vectors. Here’s a useful graphic from https://www.learndatasci.com/glossary/cosine-similarity/ that describes cosine similarity: 
+
+![cosine-similarity-vectors original](https://github.com/Intro-Robotics-UChicago-Spring-2024/final_project_soccer_bot/assets/118474712/34b1822b-ede4-4bf9-89bd-cb8826ca6c5d)
+
+Then, the mean similarity score is calculated (averaging out the similarity scores between the image to classify and all of the images in the end_images set). Through trial and error, we determined a threshold similarity score of 87, and if the score is higher we determine that the robot is at the goal (and thus should stop). The compute_image_similarity function in end_classifier.py returns both the mean similarity score and a boolean of if similarity passes the threshold. 
+
+
+# ROS Node Diagram (TO DO): 
 ###Please include a visual diagram representing all of the ROS nodes, ROS topics, and publisher/subscriber connections present in your final project.
 
 TO DO
@@ -84,7 +109,7 @@ One goal for the future would be to make the robot find the ball or goal when it
 Lastly, a future goal of our project could be to have the robot learn from and imitate more complicated (swerving) trajectories. We collected data from swerving trajectories and trained our model on it, but it seems that the model outputs tend to have the robot always move in a straight line to the goal. In order to have the model successfully learn to move in swerving trajectories, perhaps we would need to reward the model differently for predicting these trajectories (trajectories with larger angular velocities) in order to encourage the model to output such trajectories.
 
 ## Takeaways (TO DO)
-
+TO DO
 
 
 
