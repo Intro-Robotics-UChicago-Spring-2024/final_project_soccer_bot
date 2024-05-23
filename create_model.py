@@ -57,24 +57,15 @@ def main():
     test_loader = DataLoader(test_dataset, batch_size=128, shuffle=True, num_workers=4)
 
     num_epochs = 10
-<<<<<<< HEAD
-    for epoch in range(start_epoch, num_epochs):
-        print(f"EPOCH: {epoch}")
-=======
 
     #trains and tests model for specified number of epochs
     for epoch in range(0, num_epochs):
->>>>>>> a2a17ac18a97a3c01489095ff2adea027bf03e94
         loss_from_train = train(model, train_loader, optimizer, loss_function)
         print("loss from train:" + str(loss_from_train))
         prediction = test(model, test_loader, optimizer, loss_function)
     
-<<<<<<< HEAD
-    torch.save(model.state_dict(), 'model_15_epochs.pth')
-=======
     #saves model
     torch.save(model.state_dict(), 'soccer_bot_model.pth')
->>>>>>> a2a17ac18a97a3c01489095ff2adea027bf03e94
 
 #Training function
 def train(model, train_loader, optimizer, loss_function):
@@ -169,7 +160,7 @@ class Data_Process():
     def __init__(self):
 
         ###need to change folder every time, directory where photos and csv is
-        self.data_dir = '/home/lilaryan/catkin_ws/src/final_test_data'
+        self.data_dir = '/home/gnakanishi/catkin_ws/src/final_project_soccer_bot/test_data'
         
         self.velocities = []
         self.images = []

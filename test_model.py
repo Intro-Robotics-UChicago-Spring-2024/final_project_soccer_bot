@@ -44,7 +44,7 @@ class Data_Process():
     def __init__(self):
 
         ###need to change folder every time, directory where photos and csv is
-        self.data_dir = '/home/gnakanishi/catkin_ws/src/final_project_soccer_bot/final_test_set'
+        self.data_dir = '/home/lilaryan/catkin_ws/src/final_test_data'
         
         self.velocities = []
         self.images = []
@@ -168,10 +168,10 @@ class Data_Process():
 
         return self.velocities
 
-model = model = torch.hub.load('pytorch/vision:v0.10.0', 'resnet18', pretrained=True)
+model = models.resnet18(pretrained=True)
 num_ftrs = model.fc.in_features
 model.fc = nn.Linear(num_ftrs, 2)
-model.load_state_dict(torch.load("soccer_bot_model.pth"))
+model.load_state_dict(torch.load("classification_10_epochs.pth"))
 model.eval()
 
 observed_data = Data_Process()

@@ -17,20 +17,7 @@ from PIL import Image
 
 #runs the training and testing for the model
 def main():
-<<<<<<< HEAD
-    #load test data and split into train and validation, in this instance it would be the expert runs
-    #make sure to process the data so its ready for consumtion
-
-    #here is where we would load the model and loss function
-    #model = resent model
-    #loss_function = loss function that I would have to create
-
-    #next we would train the model, training itself will be writen in another function
-    #must specify epochs
-    print("here")
-=======
     #loading in the dataset that we collected
->>>>>>> a2a17ac18a97a3c01489095ff2adea027bf03e94
     observed_data = Data_Process()
     #load datasets, should be represented as (state, action) pair
     #observations should be images, actions should be linear and angular velocity
@@ -52,19 +39,8 @@ def main():
     lr = 1.0e-2
     momentum = 0.9
     weight_decay = 1.0e-4
-<<<<<<< HEAD
-    batchsize = 64
-    batchsize_valid = 64
-    start_epoch = 0
-    epochs      = 20
-    nbatches_per_epoch = int(epochs/batchsize)
-    nbatches_per_valid = int(epochs/batchsize_valid)
-
-    #need to change and figure out which one is best for us
-=======
 
     #optimizer for model, used for gradients
->>>>>>> a2a17ac18a97a3c01489095ff2adea027bf03e94
     optimizer = torch.optim.SGD(model.parameters(), lr,
                                 momentum=momentum,
                                 weight_decay=weight_decay)
@@ -81,28 +57,18 @@ def main():
     train_loader = DataLoader(train_dataset, batch_size=128, shuffle=True, num_workers=4)
     test_loader = DataLoader(test_dataset, batch_size=128, shuffle=True, num_workers=4)
 
-<<<<<<< HEAD
-    num_epochs = 20
-    for epoch in range(start_epoch, num_epochs):
-=======
     #For loop runs the test and train and creates a model
     num_epochs = 10
     for epoch in range(0, num_epochs):
         #trains model and outputs the average loss
->>>>>>> a2a17ac18a97a3c01489095ff2adea027bf03e94
         loss_from_train = train(model, train_loader, optimizer, loss_function)
-        print("\n epoch " + str(epoch))
         print("loss from train:" + str(loss_from_train))
         #test/validates model and outputs the average loss
         prediction = test(model, test_loader, optimizer, loss_function)
         print(prediction)
     
-<<<<<<< HEAD
-    torch.save(model.state_dict(), 'classification_20_epochs_2.pth')
-=======
     #saves created model in the same repo
     torch.save(model.state_dict(), 'soccer_bot_classification_18.pth')
->>>>>>> a2a17ac18a97a3c01489095ff2adea027bf03e94
 
 #dataset specifically made for our model. Used because dataloader has to take in data in the form of a pytorch dataset
 class SoccerBotDataset(Dataset):
@@ -223,12 +189,8 @@ class Data_Process():
     def __init__(self):
 
         ###need to change folder every time, directory where photos and csv is
-<<<<<<< HEAD
-        self.data_dir = '/home/lilaryan/catkin_ws/src/final_test_data'
-=======
         #Path to data dir
         self.data_dir = '/home/gnakanishi/catkin_ws/src/final_project_soccer_bot/test_data'
->>>>>>> a2a17ac18a97a3c01489095ff2adea027bf03e94
         
         #storage variables
         self.velocities = []
