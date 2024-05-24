@@ -40,14 +40,33 @@ Lastly, we created a motion model, which sets up an image callback function whic
 # System Architecture:
 ###Describe in detail the robotics algorithm you implemented and each major component of your project, highlight what pieces of code contribute to these main components
 
-## 1. Data Collection:
+
+## 1. Data Collection
 
 To collect data from our "expert" runs, we had used the file data_collection.py. We set up a ROS node and subscribed to the camera feed and the cmd_vel topic. In the image callback function, we saved the image received to a folder with the time stamp as the file name. In the cmd_vel callback function, we recorded the linear velocity, angular velocity, and time stamp, which we saved to a csv at the end. We collected data for 25 runs with different starting positions and taking different paths towards the goal by teleop-ing the robot. The data for each run was saved into a separate folder. 
 
+The code for data collection is located in data_collection.py. In the Data_Collection class, subscribers are initialized to record the turtlebot's LiDAR, cmd_vel, and image. An array is used to store the data at each timestep that the robot's state is received for, with both the image and velocties recorded (in image_callback, while callback is used to update the class variables storing the current velocities). Position is extracted in the robot_scan_received() function, calculating as a Pose and used to indicate the final part of a data collection run, when an object in front of the turtlebot is sensed within the range of 0.3m, to indicate the goal/a wall has been reached. At this point, the velocities can be instead saved as 0 to indicate in the data that the robot must be stopped. Finally, save_data() uses numpy's savetxt() method to save the array in the current dierectory.
 
-## 2. Neural Network (TO DO)
 
-(add in neural network system architecture section)
+## 2. Neural Network
+
+The code for the neural network is in create_model.py, while create_classification_model.py contains an alternate build for creating the model through classifiying the outputs into bins rather than a gradient of values.
+
+Structure is largely the same across these 2 solutions, with the main() function running everything needed to load the data, initialize the model, and save it.
+
+The supporting class of Data_Process reads in the data from the data collection, taking in a directory of multiple runs, and for each run, saving each of the images after they are processed into a tensor in an array. For the time, velocity, and quality of the runs, the csv is converted into a dataframe and each row has the velocities added in chronological order to another array.
+
+These two arrays are loaded into SoccerBotDataset class to convert them into a pytorch dataset.
+
+For the model's initialization, values are specified for the number of epochs and loss function, with the loss function using either the pytorch neural network's mean squared error or their cross entropy loss function. In the actual initialization of the model, the constructor for the MyModel() class is called. The specific model resnet 18 is used, and two additional layers are added to the neural network for the velocities. 
+
+The train() function takes our model and trains it each epoch, noting the difference between the predicted and actual values are with the loss function, backwards propogates the gradient and then updates the paramaters using the gradient, which is done by imported pytorch functions backward() and optimizer.step()
+
+The test() function works similarly to train() except the gradient generated is not used to update the model, and instead only notes how well the model performs.
+
+The train() functions gets performed on 80% of the data, and the test() function on the other 20%.
+
+Finally, the model is saved after all epochs have been ran.
 
 
 ## 3. Motion Model
