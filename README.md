@@ -84,9 +84,9 @@ Then, the mean similarity score is calculated (averaging out the similarity scor
 
 
 # ROS Node Diagram (TO DO): 
-###Please include a visual diagram representing all of the ROS nodes, ROS topics, and publisher/subscriber connections present in your final project.
 
-TO DO
+<img width="753" alt="Screenshot 2024-05-23 at 7 36 55 PM" src="https://github.com/Intro-Robotics-UChicago-Spring-2024/final_project_soccer_bot/assets/114627557/59dfe9fb-938e-441e-af13-6e375c2999b9">
+
 
 # Execution: 
 In order to train our models (only needs to be done once):
