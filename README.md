@@ -40,9 +40,9 @@ Lastly, we created a motion model, which sets up an image callback function whic
 # System Architecture:
 ###Describe in detail the robotics algorithm you implemented and each major component of your project, highlight what pieces of code contribute to these main components
 
-## 1. Data Collection: (TO DO)
+## 1. Data Collection:
 
-(add in data collection system architecture section)
+To collect data from our "expert" runs, we had used the file data_collection.py. We set up a ROS node and subscribed to the camera feed and the cmd_vel topic. In the image callback function, we saved the image received to a folder with the time stamp as the file name. In the cmd_vel callback function, we recorded the linear velocity, angular velocity, and time stamp, which we saved to a csv at the end. We collected data for 25 runs with different starting positions and taking different paths towards the goal by teleop-ing the robot. The data for each run was saved into a separate folder. 
 
 
 ## 2. Neural Network (TO DO)
