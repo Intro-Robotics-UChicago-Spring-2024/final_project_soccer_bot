@@ -83,9 +83,10 @@ End_classifier.py includes a function that takes in a path to an image taken on 
 Then, the mean similarity score is calculated (averaging out the similarity scores between the image to classify and all of the images in the end_images set). Through trial and error, we determined a threshold similarity score of 87, and if the score is higher we determine that the robot is at the goal (and thus should stop). The compute_image_similarity function in end_classifier.py returns both the mean similarity score and a boolean of if similarity passes the threshold. 
 
 
-# ROS Node Diagram (TO DO): 
+# ROS Node Diagram 
 
-<img width="753" alt="Screenshot 2024-05-23 at 7 36 55 PM" src="https://github.com/Intro-Robotics-UChicago-Spring-2024/final_project_soccer_bot/assets/114627557/59dfe9fb-938e-441e-af13-6e375c2999b9">
+<img width="755" alt="Screenshot 2024-05-23 at 7 38 54 PM" src="https://github.com/Intro-Robotics-UChicago-Spring-2024/final_project_soccer_bot/assets/114627557/c9197b08-ff05-4fe6-a1fd-10adfc70cbc4">
+
 
 
 # Execution: 
