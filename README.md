@@ -1,5 +1,4 @@
 # Project Description: 
-###Describe the goal of your project, why it's interesting, what you were able to make your robot do, and what the main components of your project are and how they fit together - please include diagrams and gifs when appropriate
 
 The goal of our project (“Soccer Bot”) was to have a robot learn to push a ball into a goal via an optimal path, as learned from expert demonstrations. Soccer bot uses a behavioral cloning approach to determine the optimal action at each state. At each timestamp, the robot passes the image from its camera feed into a model that predicts the angular and linear velocity needed to navigate towards the goal, and these velocities are passed to the robot via a Twist message on the cmd_vel topic. We were able to train a model that successfully navigated the robot and ball to the goal in linear paths from multiple starting points/angles, pushed the ball into the goal, and stopped a safe distance away from the goal. Notably, our implementation does not use any LiDAR data, teleoping, or real-time image processing to determine where it is or what action it needs to take; it simply passes images from its camera into our model, and takes action accordingly. Our main goals were (1) to learn how to implement a behavioral cloning algorithm, (2) process camera and cmd_vel data to train a neural network, and (3) be able to show that our model successfully led to the robot being able to push the ball into the goal. 
 
@@ -38,8 +37,6 @@ Lastly, we created a motion model, which sets up an image callback function whic
 
 
 # System Architecture:
-###Describe in detail the robotics algorithm you implemented and each major component of your project, highlight what pieces of code contribute to these main components
-
 
 ## 1. Data Collection
 
